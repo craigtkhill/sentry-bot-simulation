@@ -6,6 +6,9 @@ import alarm
 import notification
 import sensor
 import random
+from PIL import Image
+import random
+import os
 
 class SecurityBot:
     def __init__(self):
@@ -51,7 +54,8 @@ class SecurityBot:
 
     def _handle_patrolling(self):
         self.battery_manager.drain(self.configuration.get_speed())
-        self.configuration.patrol_location(self.configuration.get_speed())
+        if self.configuration.max_area > 0:  # Check if the patrol area is greater than zero
+            self.configuration.patrol_location(self.configuration.get_speed())
         if self.battery_manager.needs_charging():
             self.go_to_charging_station()
         else:
@@ -74,13 +78,22 @@ class SecurityBot:
             face_identified = self.facial_recognition.identify_face()
             
             if face_identified:
-                self.detection_state = "Intruder detected!"
-                self.alarm.trigger_alarm()
-                self.notification.send_alert(face_identified)
+                if not self.facial_recognition.is_known_face(face_identified):
+                    self.detection_state = "Unrecognized face detected!"
+                    print(f"Alarm triggered for unrecognized face ID: {face_identified}")
+                    self.display_random_image()  # Display a random image from the folder
+
+                    # Prompt user input to recognize the face
+                    user_recognition = input("Do you recognize this face? (yes/no): ").strip().lower()
+                    if user_recognition != 'yes':
+                        print("Unrecognized face by user. Sounding the alarm!")
+                        self.alarm.trigger_alarm()
+                    else:
+                        print("Face recognized by user. No alarm.")
+                else:
+                    self.detection_state = "Known individual detected."
             else:
-                self.detection_state = "Known individual or no threat detected."
-        else:
-            self.detection_state = "No one encountered."
+                self.detection_state = "No one encountered."
 
     def go_to_charging_station(self):
         self.status = 'return to station'
@@ -89,3 +102,16 @@ class SecurityBot:
     def turn_on(self):
         print('Turning on Security Bot...')
         self.patrol()
+
+    def display_random_image(self):
+        # Path to the folder containing the face images
+        faces_folder = 'faces/'
+        image_files = [f for f in os.listdir(faces_folder) if f.endswith('.png')]
+
+        if image_files:
+            selected_image = random.choice(image_files)
+            image_path = os.path.join(faces_folder, selected_image)
+            img = Image.open(image_path)
+            img.show()
+        else:
+            print("No images found in the folder.")

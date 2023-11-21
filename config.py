@@ -1,7 +1,9 @@
 class Config:
     MAX_AREA = 5000  # Maximum patrol area in square meters
     MAX_SPEED = 10   # Maximum speed
-    MIN_SPEED = 1    # Minimum speed
+    DEFAULT_AREA = 1000  # Default patrol area
+    DEFAULT_SPEED = 1    # Default patrol speed
+
 
     def __init__(self):
         self.__config_set = False
@@ -27,20 +29,18 @@ class Config:
             print("Invalid input. Please enter a number.")
 
     def set_area(self, area: int):
-        """ Set the patrol area """
-        if 0 <= area <= self.MAX_AREA:
+        if 0 < area <= self.MAX_AREA:
             self.__area = area
         else:
-            print(f"Area should be between 0 and {self.MAX_AREA}. Setting to default (0).")
-            self.__area = 0
+            print(f"Area should be between 0 and {self.MAX_AREA}. Setting to default ({self.DEFAULT_AREA}).")
+            self.__area = self.DEFAULT_AREA
 
     def set_speed(self, speed: int):
-        """ Set the patrol speed """
-        if self.MIN_SPEED <= speed <= self.MAX_SPEED:
+        if 1 <= speed <= self.MAX_SPEED:
             self.__speed = speed
         else:
-            print(f"Speed should be between {self.MIN_SPEED} and {self.MAX_SPEED}. Setting to default ({self.MIN_SPEED}).")
-            self.__speed = self.MIN_SPEED
+            print(f"Speed should be between 1 and {self.MAX_SPEED}. Setting to default ({self.DEFAULT_SPEED}).")
+            self.__speed = self.DEFAULT_SPEED
 
     def get_speed(self):
         """ Get the current patrol speed """
