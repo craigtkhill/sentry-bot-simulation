@@ -6,9 +6,8 @@ import alarm
 import notification
 import sensor
 import random
-from PIL import Image
-import random
 import os
+from PIL import Image
 
 class SecurityBot:
     def __init__(self):
@@ -19,21 +18,18 @@ class SecurityBot:
         self.alarm = alarm.Alarm()
         self.notification = notification.Notification()
         self.status = 'off'
-        self.detection_state = 'No detection yet'  # New attribute for detection state
+        self.detection_state = 'No detection yet'
+
+    def __str__(self):
+        battery_icon = self.get_battery_icon()
+        return (f'SecurityBot: {self.status.title()} {battery_icon}:'
+                f'{self.battery_manager.get_battery_level()}% '
+                f'Covered:{self.configuration.current_location}/'
+                f'{self.configuration.max_area}m | Detection: {self.detection_state}')
 
     def get_battery_icon(self):
-        if self.status == 'patrolling':
-            return '🔋'
-        elif self.status == 'return to station':
-            return '🔌'
-        elif self.status == 'charging':
-            return '⚡'
-        else:
-            return ''
-
-    def __str__(self) -> str:
-        battery_icon = self.get_battery_icon()
-        return f'\rSecurityBot: {self.status.title()} {battery_icon}:{self.battery_manager.get_battery_level()}% Covered:{self.configuration.current_location}/{self.configuration.max_area}m | Detection: {self.detection_state}'
+        icons = {'patrolling': '🔋', 'return to station': '🔌', 'charging': '⚡'}
+        return icons.get(self.status, '')
 
     def patrol(self):
         self.configuration.check_config()
@@ -43,19 +39,13 @@ class SecurityBot:
 
     def _perform_patrol_iteration(self):
         time.sleep(0.1)
-        print(self, end=' ' * 20)
-        
-        if self.status == 'patrolling':
-            self._handle_patrolling()
-        elif self.status == 'return to station':
-            self._handle_return_to_station()
-        elif self.status == 'charging':
-            self._handle_charging()
+        print(self, end='\r')
+        getattr(self, f"_handle_{self.status.replace(' ', '_')}")()
 
     def _handle_patrolling(self):
         self.battery_manager.drain(self.configuration.get_speed())
-        if self.configuration.max_area > 0:  # Check if the patrol area is greater than zero
-            self.configuration.patrol_location(self.configuration.get_speed())
+        if self.configuration.max_area > 0:
+            self.configuration.update_location(self.configuration.get_speed())
         if self.battery_manager.needs_charging():
             self.go_to_charging_station()
         else:
@@ -64,54 +54,50 @@ class SecurityBot:
     def _handle_return_to_station(self):
         self.battery_manager.drain(self.configuration.get_speed())
         if self.battery_manager.get_battery_level() <= self.configuration.get_speed():
-            self.battery_manager.charge(self.configuration.get_speed())
             self.status = 'charging'
-    
+
     def _handle_charging(self):
         self.battery_manager.charge(self.configuration.get_speed())
         if self.battery_manager.get_battery_level() >= 100:
             self.status = 'patrolling'
 
     def handle_detection(self):
-        # Random chance of encountering a person (e.g., 10%)
-        if random.random() < 0.1:
+        if random.random() < 0.05:
             face_identified = self.facial_recognition.identify_face()
-            
-            if face_identified:
-                if not self.facial_recognition.is_known_face(face_identified):
-                    self.detection_state = "Unrecognized face detected!"
-                    print(f"Alarm triggered for unrecognized face ID: {face_identified}")
-                    self.display_random_image()  # Display a random image from the folder
+            self.process_identified_face(face_identified)
 
-                    # Prompt user input to recognize the face
-                    user_recognition = input("Do you recognize this face? (yes/no): ").strip().lower()
-                    if user_recognition != 'yes':
-                        print("Unrecognized face by user. Sounding the alarm!")
-                        self.alarm.trigger_alarm()
-                    else:
-                        print("Face recognized by user. No alarm.")
-                else:
-                    self.detection_state = "Known individual detected."
-            else:
-                self.detection_state = "No one encountered."
+    def process_identified_face(self, face_identified):
+        if not face_identified:
+            self.detection_state = "No one encountered."
+            return
+
+        self.detection_state = "Known individual detected." if self.facial_recognition.is_known_face(face_identified) else "Unrecognized face detected!"
+        print(f"{self.detection_state}: {face_identified}")
+
+        if not self.facial_recognition.is_known_face(face_identified):
+            self.handle_unrecognized_face(face_identified)
+
+    def handle_unrecognized_face(self, face_identified):
+        user_recognition = input("Do you recognize this face? (yes/no): ").strip().lower()
+        if user_recognition != 'yes':
+            print("Unrecognized face by user. Sounding the alarm!")
+            self.alarm.trigger_alarm()
+        else:
+            print("Face recognized by user. No alarm.")
+            self.facial_recognition.add_face(face_identified)
 
     def go_to_charging_station(self):
         self.status = 'return to station'
-        self.configuration.return_to_station()
-    
+
     def turn_on(self):
         print('Turning on Security Bot...')
         self.patrol()
 
     def display_random_image(self):
-        # Path to the folder containing the face images
         faces_folder = 'faces/'
         image_files = [f for f in os.listdir(faces_folder) if f.endswith('.png')]
-
         if image_files:
-            selected_image = random.choice(image_files)
-            image_path = os.path.join(faces_folder, selected_image)
-            img = Image.open(image_path)
+            img = Image.open(os.path.join(faces_folder, random.choice(image_files)))
             img.show()
         else:
             print("No images found in the folder.")
