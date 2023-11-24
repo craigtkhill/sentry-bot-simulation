@@ -1,22 +1,17 @@
 import time
-import config
-import battery
-import facial_recognition
-import alarm
-import notification
-import sensor
 import random
 import os
 from PIL import Image
 
+
 class SecurityBot:
-    def __init__(self):
-        self.configuration = config.Config()
-        self.battery_manager = battery.BatteryManager()
-        self.sensor_processor = sensor.SensorProcessor()
-        self.facial_recognition = facial_recognition.FacialRecognition()
-        self.alarm = alarm.Alarm()
-        self.notification = notification.Notification()
+    def __init__(self, config, battery_manager, sensor_processor, facial_recognition, alarm, notification):
+        self.configuration = config
+        self.battery_manager = battery_manager
+        self.sensor_processor = sensor_processor
+        self.facial_recognition = facial_recognition
+        self.alarm = alarm
+        self.notification = notification
         self.status = 'off'
         self.detection_state = 'No detection yet'
 
