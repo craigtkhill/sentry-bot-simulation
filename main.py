@@ -1,9 +1,9 @@
 from config import Config
-from battery import BatteryManager
+from battery_manager import BatteryManager
 from facial_recognition import FacialRecognition
 from alarm import Alarm
 from notification import Notification
-from sensor import SensorProcessor
+from sensor_processor import SensorProcessor
 from security_bot import SecurityBot
 
 if __name__ == "__main__":
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     sensor_processor = SensorProcessor()
     facial_recognition = FacialRecognition()
     alarm = Alarm()
-    notification = Notification()
+    notification = Notification(config.user_contact, config.security_company_contact)
 
     bot = SecurityBot(config, battery_manager, sensor_processor, facial_recognition, alarm, notification)
     bot.turn_on()

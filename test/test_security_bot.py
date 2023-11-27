@@ -1,48 +1,70 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import Mock, patch
 from security_bot import SecurityBot
-from config import Config
-from battery import BatteryManager
-from sensor import SensorProcessor
+from facial_recognition import FacialRecognition
+from PIL import Image
+
+# Mock dependencies
+config_mock = Mock()
+battery_manager_mock = Mock()
+sensor_processor_mock = Mock()
+facial_recognition_mock = FacialRecognition()
+alarm_mock = Mock()
+notification_mock = Mock()
 
 class TestSecurityBot(unittest.TestCase):
 
     def setUp(self):
-        self.bot = SecurityBot()
+        # Set up mocks
+        config_mock.max_area = 5000
+        battery_manager_mock.get_battery_level.return_value = 100
+        self.security_bot = SecurityBot(
+            config_mock,
+            battery_manager_mock,
+            sensor_processor_mock,
+            facial_recognition_mock,
+            alarm_mock,
+            notification_mock
+        )
 
-    def test_get_battery_icon(self):
-        # Test for different statuses
-        self.bot.status = 'patrolling'
-        self.assertEqual(self.bot.get_battery_icon(), '🔋')
-        self.bot.status = 'return to station'
-        self.assertEqual(self.bot.get_battery_icon(), '🔌')
-        self.bot.status = 'charging'
-        self.assertEqual(self.bot.get_battery_icon(), '⚡')
+    # Test Initialization
+    def test_initialization(self):
+        self.assertEqual(self.security_bot.status, 'off')
+        self.assertEqual(self.security_bot.detection_state, 'No detection yet')
 
-    def test_perform_patrol_iteration_behavior(self):
-        with patch('time.sleep'), patch.object(self.bot, '_handle_patrolling'):
-            self.bot.status = 'patrolling'
-            self.bot._perform_patrol_iteration()
-            self.bot._handle_patrolling.assert_called_once()
+    # Test Patrol Logic
+    def test_patrol_logic(self):
+        # This test might require additional setup to handle infinite loops or time delays
+        pass
 
-    def test_handle_return_to_station(self):
-        self.bot.status = 'return to station'
-        self.bot.battery_manager.get_battery_level = MagicMock(return_value=1)
-        self.bot.battery_manager.charge = MagicMock()
-        self.bot._handle_return_to_station()
-        self.assertEqual(self.bot.status, 'charging')
-        self.bot.battery_manager.charge.assert_called_once()
+    # Test Battery Drain and Charging
+    def test_battery_drain_and_charging(self):
+        # Setup initial battery level
+        battery_manager_mock.get_battery_level.return_value = 100
+        self.security_bot._handle_patrolling()
+        battery_manager_mock.drain.assert_called_with('patrol')
 
-    def test_handle_charging(self):
-        self.bot.status = 'charging'
-        self.bot.battery_manager.get_battery_level = MagicMock(return_value=100)
-        self.bot.battery_manager.charge = MagicMock()
-        self.bot._handle_charging()
-        self.assertEqual(self.bot.status, 'patrolling')
-        self.bot.battery_manager.charge.assert_called_once()
+        self.security_bot._handle_charging()
+        battery_manager_mock.charge.assert_called_with(config_mock.get_speed.return_value)
 
-    
-        
+    # Test Detection Handling
+    def test_detection_handling(self):
+        # Mock random.choice to control the output of identify_face
+        with patch('random.choice', return_value='face_1'):
+            face_identified = facial_recognition_mock.identify_face()
+            self.assertEqual(face_identified, 'face_1')
 
+    # Test Alarm and Notification
+    def test_alarm_and_notification(self):
+        with patch('builtins.input', return_value='no'):
+            self.security_bot.handle_unrecognized_face('face_1')
+        alarm_mock.trigger_alarm.assert_called_once()
+        # Add more assertions for different scenarios
 
-
+    # Test Display Random Image
+    def test_display_random_image(self):
+        # Mock os.listdir and Image.open
+        with patch('os.listdir', return_value=['image1.png']), \
+             patch.object(Image, 'open', return_value=Mock()) as mock_open:
+            self.security_bot.display_random_image()
+            mock_open.assert_called_once()

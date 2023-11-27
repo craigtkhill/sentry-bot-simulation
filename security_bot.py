@@ -1,8 +1,9 @@
+# security_bot.py
+
 import time
 import random
 import os
 from PIL import Image
-
 
 class SecurityBot:
     def __init__(self, config, battery_manager, sensor_processor, facial_recognition, alarm, notification):
@@ -38,7 +39,7 @@ class SecurityBot:
         getattr(self, f"_handle_{self.status.replace(' ', '_')}")()
 
     def _handle_patrolling(self):
-        self.battery_manager.drain(self.configuration.get_speed())
+        self.battery_manager.drain('patrol')
         if self.configuration.max_area > 0:
             self.configuration.update_location(self.configuration.get_speed())
         if self.battery_manager.needs_charging():
@@ -47,7 +48,7 @@ class SecurityBot:
             self.handle_detection()
 
     def _handle_return_to_station(self):
-        self.battery_manager.drain(self.configuration.get_speed())
+        self.battery_manager.drain('idle')  # Drain battery at idle rate while returning to station
         if self.battery_manager.get_battery_level() <= self.configuration.get_speed():
             self.status = 'charging'
 
@@ -73,10 +74,11 @@ class SecurityBot:
             self.handle_unrecognized_face(face_identified)
 
     def handle_unrecognized_face(self, face_identified):
-        user_recognition = input("Do you recognize this face? (yes/no): ").strip().lower()
+        user_recognition = self.notification.send_user_notification(face_identified)
         if user_recognition != 'yes':
             print("Unrecognized face by user. Sounding the alarm!")
             self.alarm.trigger_alarm()
+            self.notification.alert_security_company(face_identified)
         else:
             print("Face recognized by user. No alarm.")
             self.facial_recognition.add_face(face_identified)
