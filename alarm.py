@@ -3,6 +3,7 @@ class Alarm:
         self.is_active = False
         self.snooze_active = False
         self.silent_mode = False
+        self.waiting_for_security = False
 
     def trigger_alarm(self):
         if self.snooze_active:
@@ -12,14 +13,11 @@ class Alarm:
         else:
             print("Alarm triggered! Loud alarm is sounding.")
             self.is_active = True
+            self.waiting_for_security = True
 
-    def set_snooze(self, duration):
-        self.snooze_active = True
-        print(f"Alarm snoozed for {duration} seconds.")
-
-    def disable_snooze(self):
-        self.snooze_active = False
-        print("Snooze disabled.")
+    def security_check_done(self):
+        print("Security company has checked. Resetting alarm.")
+        self.reset_alarm()
 
     def set_silent_mode(self, silent):
         self.silent_mode = silent
@@ -30,4 +28,5 @@ class Alarm:
         self.is_active = False
         self.snooze_active = False
         self.silent_mode = False
+        self.waiting_for_security = False
         print("Alarm reset to default state.")
