@@ -1,9 +1,7 @@
-# security_bot.py
-
-import time
-import random
 import os
 from PIL import Image
+import random
+from bot_behaviour import BotBehaviour
 
 class SecurityBot:
     def __init__(self, config, battery_manager, sensor_processor, facial_recognition, alarm, notification):
@@ -15,6 +13,7 @@ class SecurityBot:
         self.notification = notification
         self.status = 'off'
         self.detection_state = 'No detection yet'
+        self.behaviour = BotBehaviour(self)
 
     def __str__(self):
         battery_icon = self.get_battery_icon()
@@ -27,68 +26,12 @@ class SecurityBot:
         icons = {'patrolling': '🔋', 'return to station': '🔌', 'charging': '⚡'}
         return icons.get(self.status, '')
 
-    def patrol(self):
-        self.configuration.check_config()
-        self.status = 'patrolling'
-        while True:
-            self._perform_patrol_iteration()
-
-    def _perform_patrol_iteration(self):
-        time.sleep(0.1)
-        print(self, end='\r')
-        getattr(self, f"_handle_{self.status.replace(' ', '_')}")()
-
-    def _handle_patrolling(self):
-        self.battery_manager.drain('patrol')
-        if self.configuration.max_area > 0:
-            self.configuration.update_location(self.configuration.get_speed())
-        if self.battery_manager.needs_charging():
-            self.go_to_charging_station()
-        else:
-            self.handle_detection()
-
-    def _handle_return_to_station(self):
-        self.battery_manager.drain('idle')  # Drain battery at idle rate while returning to station
-        if self.battery_manager.get_battery_level() <= self.configuration.get_speed():
-            self.status = 'charging'
-
-    def _handle_charging(self):
-        self.battery_manager.charge(self.configuration.get_speed())
-        if self.battery_manager.get_battery_level() >= 100:
-            self.status = 'patrolling'
-
-    def handle_detection(self):
-        if random.random() < 0.05:
-            face_identified = self.facial_recognition.identify_face()
-            self.process_identified_face(face_identified)
-
-    def process_identified_face(self, face_identified):
-        if not face_identified:
-            self.detection_state = "No one encountered."
-            return
-
-        self.detection_state = "Known individual detected." if self.facial_recognition.is_known_face(face_identified) else "Unrecognized face detected!"
-        print(f"{self.detection_state}: {face_identified}")
-
-        if not self.facial_recognition.is_known_face(face_identified):
-            self.handle_unrecognized_face(face_identified)
-
-    def handle_unrecognized_face(self, face_identified):
-        user_recognition = self.notification.send_user_notification(face_identified)
-        if user_recognition != 'yes':
-            print("Unrecognized face by user. Sounding the alarm!")
-            self.alarm.trigger_alarm()
-            self.notification.alert_security_company(face_identified)
-        else:
-            print("Face recognized by user. No alarm.")
-            self.facial_recognition.add_face(face_identified)
-
     def go_to_charging_station(self):
         self.status = 'return to station'
 
     def turn_on(self):
         print('Turning on Security Bot...')
-        self.patrol()
+        self.behaviour.patrol()
 
     def display_random_image(self):
         faces_folder = 'faces/'
