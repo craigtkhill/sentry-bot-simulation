@@ -7,7 +7,6 @@ from PIL import Image
 # Mock dependencies
 config_mock = Mock()
 battery_manager_mock = Mock()
-sensor_processor_mock = Mock()
 facial_recognition_mock = FacialRecognition()
 alarm_mock = Mock()
 notification_mock = Mock()
@@ -21,7 +20,6 @@ class TestSecurityBot(unittest.TestCase):
         self.security_bot = SecurityBot(
             config_mock,
             battery_manager_mock,
-            sensor_processor_mock,
             facial_recognition_mock,
             alarm_mock,
             notification_mock
