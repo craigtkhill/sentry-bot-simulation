@@ -54,6 +54,7 @@ class BotBehaviour:
             self.handle_unrecognized_face(face_identified)
 
     def handle_unrecognized_face(self, face_identified):
+        self.bot.display_random_image()
         user_recognition = self.bot.notification.send_user_notification(face_identified)
         if user_recognition != 'yes':
             print("Unrecognized face by user. Sounding the alarm!")
