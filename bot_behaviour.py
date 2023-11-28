@@ -22,6 +22,8 @@ class BotBehaviour:
             self.bot.configuration.update_location(self.bot.configuration.get_speed())
         if self.bot.battery_manager.needs_charging():
             self.bot.go_to_charging_station()
+        if self.bot.alarm.waiting_for_security:
+            self.bot.alarm.update_security_arrival_countdown()
         else:
             self.handle_detection()
 

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     sensor_processor = SensorProcessor()
     facial_recognition = FacialRecognition()
     alarm = Alarm()
-    notification = Notification(config.user_contact, config.security_company_contact)
+    notification = Notification(config.user_contact, config.security_company_contact, alarm)
 
     bot = SecurityBot(config, battery_manager, sensor_processor, facial_recognition, alarm, notification)
     bot.turn_on()
