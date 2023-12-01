@@ -38,7 +38,7 @@ class Alarm:
 
     def update_security_arrival_countdown(self):
         if self.waiting_for_security and self.security_arrival_countdown > 0:
-            print(f"Security arriving in {self.security_arrival_countdown} seconds.", end='\r')
+            print(f"Security arriving in {self.security_arrival_countdown}", end='\r')
             self.security_arrival_countdown -= 1
             time.sleep(1)
             if self.security_arrival_countdown <= 0:

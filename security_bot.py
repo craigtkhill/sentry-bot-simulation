@@ -17,7 +17,7 @@ class SecurityBot:
     def __str__(self):
         battery_icon = self.get_battery_icon()
         return (f'SecurityBot: {self.status.title()} {battery_icon}:'
-                f'{self.battery_manager.get_battery_level()}% '
+                f'{round(self.battery_manager.get_battery_level())}% '
                 f'Covered:{self.configuration.current_location}/'
                 f'{self.configuration.max_area}m | Detection: {self.detection_state}')
 

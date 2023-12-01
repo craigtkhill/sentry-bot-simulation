@@ -5,7 +5,6 @@ class BatteryManager:
     IDLE_DRAIN_RATE = 0.1
     PATROL_DRAIN_RATE = 0.5
     DETECTION_DRAIN_RATE = 0.3
-    # You can add other specific activities and their respective drain rates
 
     def __init__(self):
         self.battery_level = 100
@@ -19,8 +18,8 @@ class BatteryManager:
             self.battery_level -= self.IDLE_DRAIN_RATE
         # Implement other conditions for different activities
 
-        # Ensure the battery level doesn't go below 0
-        self.battery_level = max(0, self.battery_level)
+        # Ensure the battery level doesn't go below 5
+        self.battery_level = max(5, self.battery_level)
 
     def charge(self, amount):
         self.battery_level = min(100, self.battery_level + amount)
