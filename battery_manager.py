@@ -16,9 +16,6 @@ class BatteryManager:
             self.battery_level -= self.DETECTION_DRAIN_RATE
         elif activity == 'idle':
             self.battery_level -= self.IDLE_DRAIN_RATE
-        # Implement other conditions for different activities
-
-        # Ensure the battery level doesn't go below 5
         self.battery_level = max(5, self.battery_level)
 
     def charge(self, amount):

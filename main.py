@@ -1,3 +1,4 @@
+# main.py
 from config import Config
 from battery_manager import BatteryManager
 from facial_recognition import FacialRecognition
