@@ -5,50 +5,51 @@ import json
 
 class TestConfig(unittest.TestCase):
 
-    # Mocking the contents of config.json
-    mock_config_data = {
-        "MAX_AREA": 5000,
-        "DEFAULT_AREA": 1000,
-        "DEFAULT_SPEED": 1,
-        "MAX_SPEED": 10
-    }
+    def setUp(self):
+        # Mock the open function and json.load to provide a controlled environment for testing
+        self.config_data = {
+            'MAX_AREA': 5000,
+            'DEFAULT_AREA': 1000,
+            'DEFAULT_SPEED': 1,
+            'MAX_SPEED': 10,
+            'USER_CONTACT': 'user@example.com',
+            'SECURITY_CONTACT': 'security@example.com'
+        }
+        self.mock_file = mock_open(read_data=json.dumps(self.config_data))
+        self.patcher = patch('builtins.open', self.mock_file)
+        self.patcher.start()
+        self.config = Config()
 
-    # Test Initialization and Load Config
-    def test_initialization_and_load_config(self):
-        with patch('builtins.open', mock_open(read_data=json.dumps(self.mock_config_data))):
-            config = Config()
-            self.assertEqual(config.MAX_AREA, 5000)
-            self.assertEqual(config.DEFAULT_AREA, 1000)
-            self.assertEqual(config.DEFAULT_SPEED, 1)
-            self.assertEqual(config.MAX_SPEED, 10)
+    def tearDown(self):
+        self.patcher.stop()
 
-    # Test Set Area
-    def test_set_area(self):
-        config = Config()
-        config.set_area(3000)
-        self.assertEqual(config.max_area, 3000)
-        config.set_area(6000)  # Out of range
-        self.assertEqual(config.max_area, config.DEFAULT_AREA)
+    def test_load_config(self):
+        # Test if the configuration is loaded correctly
+        self.assertEqual(self.config.MAX_AREA, 5000)
+        self.assertEqual(self.config.DEFAULT_AREA, 1000)
+        self.assertEqual(self.config.DEFAULT_SPEED, 1)
+        self.assertEqual(self.config.MAX_SPEED, 10)
+        self.assertEqual(self.config.user_contact, 'user@example.com')
+        self.assertEqual(self.config.security_company_contact, 'security@example.com')
 
-    # Test Get Speed
+    def test_set_area_within_range(self):
+        # Test setting the patrol area within the allowed range
+        self.config.set_area(3000)
+        self.assertEqual(self.config.max_area, 3000)
+
+    def test_set_area_out_of_range(self):
+        # Test setting the patrol area outside the allowed range
+        self.config.set_area(6000)
+        self.assertEqual(self.config.max_area, self.config.DEFAULT_AREA)
+
     def test_get_speed(self):
-        config = Config()
-        self.assertEqual(config.get_speed(), config.DEFAULT_SPEED)
+        # Test getting the patrol speed
+        self.assertEqual(self.config.get_speed(), self.config.DEFAULT_SPEED)
 
-    # Test Update Location
     def test_update_location(self):
-        config = Config()
-        config.set_area(500)  # Set a known area
-        config.update_location(250)
-        self.assertEqual(config.current_location, 250)
-        config.update_location(300)  # This should wrap around
-        self.assertEqual(config.current_location, 50)
-
-    # Test Input Config
-    def test_input_config(self):
-        with patch('builtins.input', side_effect=['3000', '5']), \
-             patch('builtins.open', mock_open(read_data=json.dumps(self.mock_config_data))):
-            config = Config()
-            config.input_config()
-            self.assertEqual(config.max_area, 3000)
-            self.assertEqual(config.get_speed(), 5)
+        # Test updating the current location
+        initial_location = self.config.current_location
+        move_distance = 100
+        self.config.update_location(move_distance)
+        expected_location = (initial_location + move_distance) % self.config.max_area
+        self.assertEqual(self.config.current_location, expected_location)

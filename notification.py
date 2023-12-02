@@ -18,8 +18,6 @@ class Notification:
 
     def handle_security_response(self):
         # This method can be called periodically to check if security has responded
-        # This is a placeholder for how the security company might respond
-        # In a real-world scenario, this would be replaced with actual communication logic
         if self.alarm.waiting_for_security:
             security_response = random.choice(['yes', 'no'])  # Simulating a random response
             if security_response == 'yes':
