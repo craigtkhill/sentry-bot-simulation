@@ -46,3 +46,24 @@ class TestBatteryManager(unittest.TestCase):
 
         self.battery_manager.battery_level = BatteryManager.LOW_BATTERY_THRESHOLD + 1
         self.assertFalse(self.battery_manager.needs_charging())
+# ECP and BVA for the 'charge' method
+    def test_charge_battery_with_negative_amount(self):
+        initial_level = self.battery_manager.get_battery_level()
+        self.battery_manager.charge(-10)  # Invalid negative charge
+        # Expect no change in battery level for negative charge
+        self.assertEqual(self.battery_manager.get_battery_level(), initial_level)
+
+    def test_charge_battery_with_small_valid_amount(self):
+        self.battery_manager.battery_level = 95
+        self.battery_manager.charge(4)  # Valid charge that does not exceed 100
+        self.assertEqual(self.battery_manager.get_battery_level(), 99)
+
+    def test_charge_battery_with_exact_amount_to_full(self):
+        self.battery_manager.battery_level = 80
+        self.battery_manager.charge(20)  # Charge exactly to the full level
+        self.assertEqual(self.battery_manager.get_battery_level(), 100)
+
+    def test_charge_battery_with_large_valid_amount(self):
+        self.battery_manager.battery_level = 50
+        self.battery_manager.charge(100)  # Valid charge but exceeds 100
+        self.assertEqual(self.battery_manager.get_battery_level(), 100)

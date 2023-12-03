@@ -25,7 +25,8 @@ class BatteryManager:
 
     def charge(self, amount):
         # Charge the battery by a certain amount
-        self.battery_level = min(100, self.battery_level + amount)
+        if amount > 0:
+            self.battery_level = min(100, self.battery_level + amount)
 
     def get_battery_level(self):
         # Return the current battery level
